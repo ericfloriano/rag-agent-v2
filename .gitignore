@@ -1,0 +1,21 @@
+# Virtual Environments
+venv/
+.venv/
+__pycache__/
+*.pyc
+
+# Secrets and API Keys
+.env
+
+# System Files
+.DS_Store
+
+# Vector Databases (local)
+qdrant_db/
+
+# Raw Knowledge Base
+documentos_fonte/
+
+# IDE
+.vscode/
+.idea/
