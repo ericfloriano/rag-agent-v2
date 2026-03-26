@@ -34,9 +34,10 @@ graph TD
     CR -->|Telemetry| LS[LangSmith<br>Observability]
     
     subgraph Cognitive Engine
-        CR --> Router{Query Router}
-        Router -->|Complexity: Low| Groq[Groq / Llama 3]
-        Router -->|Complexity: High| Gemini[Google Gemini 2.0 Flash]
+        CR --> Router{Multi-LLM Intent Router}
+        Router --> Primary[Gemini 2.0 Flash]
+        Primary -- Failover --> Secondary[Groq / Llama 3]
+        Secondary -- Failover --> Tertiary[OpenRouter / Kimi]
     end
     
     subgraph Memory Matrix
