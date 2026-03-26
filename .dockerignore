@@ -1,0 +1,34 @@
+# .dockerignore
+# Rules to ignore files not required for deployment (optimizes build size and security)
+
+.git
+.github
+.vscode
+.idea
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.env
+.venv
+pip-log.txt
+pip-delete-this-directory.txt
+.coverage
+.tox
+.nox
+.pytest_cache
+.mypy_cache
+.ruff_cache
+docs/
+*.md
+bot.log
+*.sqlite3
+*.db
+tmp/
+temp/
+tests/
+# Avoid sending large local vector storage (we use Qdrant Cloud via API)
+qdrant_storage/

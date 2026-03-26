@@ -1,26 +1,32 @@
-# ==================================================
-# Dockerfile — Agentic RAG v2 (GCP Cloud Run)
-# ==================================================
-FROM python:3.11-slim
+# Use official slim Python 3.12 image for lightweight footprint
+FROM python:3.12-slim
 
-# Install system dependencies
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends build-essential \
-    && rm -rf /var/lib/apt/lists/*
+# Prevent .pyc files and ensure logs are flush immediately (unbuffered)
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
 
-# Set working directory
+# Set default timezone (can be overridden via ENV)
+ENV TZ=America/Sao_Paulo
+
+# Define working directory inside the container
 WORKDIR /app
 
-# Copy requirements first for Docker layer caching
-COPY requirements.txt .
-RUN pip install --upgrade pip \
-    && pip install --no-cache-dir -r requirements.txt
+# Install system dependencies (build-essential for compilation, ffmpeg for Whisper)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    ffmpeg \
+    && rm -rf /var/lib/apt/lists/*
 
-# Copy application code
+# Copy requirements and install via pip (cache-optimized layering)
+COPY requirements.txt .
+
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
+
+# Copy the entire project codebase
 COPY . .
 
-# Cloud Run uses the PORT environment variable
-ENV PORT=8080
-
-# Start FastAPI with uvicorn
-CMD exec uvicorn src.main:app --host 0.0.0.0 --port $PORT --workers 1
+# Expose PORT injected by Google Cloud Run (default 8080)
+# Use shell form to allow environment variable expansion
+# 'exec' ensures signals (SIGTERM) reach the uvicorn process correctly
+CMD set -e; exec uvicorn src.main:app --host 0.0.0.0 --port ${PORT:-8000}

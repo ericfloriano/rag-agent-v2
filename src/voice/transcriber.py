@@ -43,6 +43,7 @@ async def transcribe_audio(audio_path: str | Path) -> str:
             file=(audio_path.name, audio_file.read()),
             model=WHISPER_MODEL_NAME,
             language="pt",  # Portuguese (Brazil)
+            prompt="ReCARE, RePAD, Visuri, eletroestimulação, estimulação elétrica neuromuscular, WB-EMS, UTI, mobilização.",
             response_format="text",
         )
 

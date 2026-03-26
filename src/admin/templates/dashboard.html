@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReCARE Admin - Base de Conhecimento</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body class="bg-gray-900 text-white min-h-screen p-4 md:p-8">
+    
+    <div class="max-w-6xl mx-auto">
+        <!-- Header -->
+        <header class="flex justify-between items-center mb-10 pb-6 border-b border-gray-700">
+            <div class="flex items-center gap-4">
+                <div class="bg-blue-600 p-3 rounded-xl shadow-lg shadow-blue-500/20">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400">ReCARE AI FastLearn Admin</h1>
+                    <p class="text-sm text-gray-400">Gestão da Memória RAM e Vetorial</p>
+                </div>
+            </div>
+            
+            <a href="/admin/logout" class="bg-gray-800 hover:bg-gray-700 border border-gray-600 px-4 py-2 rounded-lg text-sm transition font-medium flex gap-2 items-center">
+                Desconectar
+            </a>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <!-- Coluna Esquerda: Ações Rápidas -->
+            <div class="space-y-6">
+                <!-- Card de Upload -->
+                <div class="bg-gray-800 rounded-2xl p-6 border border-gray-700 shadow-xl">
+                    <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                        Novo Arquivo Técnico (PDF/TXT)
+                    </h2>
+                    
+                    <form id="uploadForm" class="space-y-4">
+                        <div class="border-2 border-dashed border-gray-600 hover:border-blue-500 bg-gray-900/50 rounded-xl p-8 text-center transition cursor-pointer" onclick="document.getElementById('fileInput').click()">
+                            <svg class="w-10 h-10 mx-auto text-gray-500 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                            <p class="text-sm text-gray-300 font-medium">Clique para selecionar</p>
+                            <p class="text-xs text-gray-500 mt-1">Apenas .pdf e .txt (Max 15MB)</p>
+                            <input type="file" id="fileInput" name="file" accept=".pdf,.txt" class="hidden" onchange="enableUpload()">
+                        </div>
+                        <p id="fileName" class="text-xs text-blue-400 font-medium text-center truncate hidden"></p>
+                        
+                        <button type="button" id="uploadBtn" onclick="submitUpload()" disabled class="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-700 disabled:text-gray-500 text-white font-semibold py-3 px-4 rounded-lg transition-colors">
+                            Processar e Injetar
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Card de Manutenção Geral -->
+                <div class="bg-gray-800 rounded-2xl p-6 border border-gray-700 shadow-xl">
+                    <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        Otimização de Custos
+                    </h2>
+                    <p class="text-xs text-gray-400 mb-4">O Cache Semântico evita chamadas à API da IA para perguntas repetidas. Se as respostas do bot estiverem obsoletas, purgue o cache.</p>
+                    <button onclick="clearCache()" class="w-full bg-purple-600 hover:bg-purple-700/80 border border-purple-500 text-white font-semibold py-2.5 px-4 rounded-lg transition-colors text-sm">
+                        Remover Cache Semântico
+                    </button>
+                </div>
+            </div>
+
+            <!-- Coluna Direita: Qdrant Index -->
+            <div class="lg:col-span-2">
+                <div class="bg-gray-800 rounded-2xl border border-gray-700 shadow-xl overflow-hidden">
+                    <div class="px-6 py-5 border-b border-gray-700 flex justify-between items-center bg-gray-800/50">
+                        <h2 class="text-lg font-semibold flex items-center gap-2">
+                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                            Documentos Ativos na IA
+                        </h2>
+                        <span class="bg-gray-700 text-xs px-2.5 py-1 rounded-full text-gray-300 font-mono">{{ documents | length }} ARQUIVOS</span>
+                    </div>
+
+                    <div class="divide-y divide-gray-700/50 max-h-[600px] overflow-y-auto">
+                        {% if not documents %}
+                        <div class="p-12 text-center text-gray-500">
+                            Nenhum manual injetado no momento. Base zerada.
+                        </div>
+                        {% endif %}
+
+                        {% for filename, chunks in documents.items() %}
+                        <div class="p-5 hover:bg-gray-750 transition flex items-center justify-between group">
+                            <div class="flex items-center gap-4">
+                                <div class="bg-gray-900 border border-gray-700 p-2.5 rounded-lg text-red-400">
+                                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"></path></svg>
+                                </div>
+                                <div>
+                                    <p class="font-medium text-gray-200 group-hover:text-blue-400 transition">{{ filename }}</p>
+                                    <p class="text-xs text-gray-500 mt-0.5">~{{ chunks }} sub-vetores indexados</p>
+                                </div>
+                            </div>
+                            <button onclick="deleteDoc('{{ filename }}')" class="p-2 text-gray-500 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition" title="Excluir documento">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                            </button>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Interface Scripts -->
+    <script>
+        function enableUpload() {
+            const input = document.getElementById('fileInput');
+            const btn = document.getElementById('uploadBtn');
+            const nameLabel = document.getElementById('fileName');
+            if (input.files.length > 0) {
+                btn.disabled = false;
+                nameLabel.textContent = input.files[0].name;
+                nameLabel.classList.remove('hidden');
+            }
+        }
+
+        async function submitUpload() {
+            const file = document.getElementById('fileInput').files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const btn = document.getElementById('uploadBtn');
+            btn.innerHTML = `<svg class="animate-spin -ml-1 mr-2 h-5 w-5 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Injetando IA...`;
+            btn.disabled = true;
+
+            try {
+                await fetch('/admin/upload', { method: 'POST', body: formData })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        Swal.fire({ title: 'Success!', text: data.message, icon: 'success', background: '#1f2937', color: '#fff', confirmButtonColor: '#3b82f6' })
+                        .then(() => location.reload());
+                    } else {
+                        Swal.fire({ title: 'Error!', text: data.detail || 'A server error occurred.', icon: 'error', background: '#1f2937', color: '#fff', confirmButtonColor: '#3b82f6' });
+                    }
+                })
+                .catch(error => {
+                    Swal.fire({ title: 'Connection Error', text: 'Could not connect to the server.', icon: 'error', background: '#1f2937', color: '#fff', confirmButtonColor: '#3b82f6' });
+                });
+            } finally {
+                btn.innerHTML = `Processar e Injetar`;
+                btn.disabled = false;
+            }
+        }
+
+        async function deleteDoc(filename) {
+            Swal.fire({
+                title: 'Desaprender Documento?',
+                text: `Esta ação apagará 100% da memória do ReCARE atrelada ao arquivo "${filename}". A ação é irreversível.`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#374151',
+                confirmButtonText: 'Sim, Apagar da IA',
+                cancelButtonText: 'Cancelar',
+                background: '#1f2937', color: '#fff'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    await fetch(`/admin/documents/${filename}`, { method: 'DELETE' })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            Swal.fire({ title: 'Deleted!', text: data.message, icon: 'success', background: '#1f2937', color: '#fff', confirmButtonColor: '#3b82f6' })
+                            .then(() => location.reload());
+                        } else {
+                            Swal.fire({ title: 'Error!', text: data.detail, icon: 'error', background: '#1f2937', color: '#fff', confirmButtonColor: '#3b82f6' });
+                        }
+                    });
+                }
+            });
+        }
+
+        async function clearCache() {
+            Swal.fire({
+                title: 'Remover Respostas Rápidas?',
+                text: "O robô esquecerá todas as respostas perfeitas que já havia decorado para perguntas repetidas. Ele terá que re-gerar pelo LLaMA/Gemini na próxima vez.",
+                icon: 'info',
+                showCancelButton: true,
+                confirmButtonColor: '#8b5cf6',
+                cancelButtonColor: '#374151',
+                confirmButtonText: 'Remover Cache',
+                cancelButtonText: 'Cancelar',
+                background: '#1f2937', color: '#fff'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    const res = await fetch(`/admin/cache`, { method: 'DELETE' });
+                    const data = await res.json();
+                    if (res.ok) {
+                        Swal.fire({ title: 'Purged!', text: data.message, icon: 'success', background: '#1f2937', color: '#fff', confirmButtonColor: '#3b82f6' });
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
