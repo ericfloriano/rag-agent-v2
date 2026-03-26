@@ -20,6 +20,7 @@ This platform leverages the **Google Cloud Ecosystem** to deliver a resilient, c
 - **Intelligent LLM Orchestration:** Powered by **LangGraph**, the system dynamically routes queries between **Gemini 2.0 Flash** for state-of-the-art technical reasoning and **Llama-3 (via Groq)** for high-speed assistance.
 - **Zero-Cost Semantic Caching:** Optimized interception matrix implemented in Qdrant. Semantically similar queries are resolved in 0.05s directly from vector memory, significantly reducing LLM inference costs.
 - **Full Observability:** Integrated with **LangSmith** for end-to-end tracing. Tracks latency, token consumption, and multi-hop reasoning logic in production environments.
+- **Architectural Resilience (Multi-LLM Cascade):** Implementation of a custom `LLMIntentRouter`. If the primary model (Gemini) encounters rate limits or outages, the system automatically falls back to secondary (Groq/Llama-3) and tertiary (OpenRouter/Kimi) providers in sub-milliseconds.
 - **Secured Administrative Panel:** A professional web interface for knowledge base management. Implements **Cloudflare Turnstile**, **SlowAPI Rate Limiting**, and **Strict HttpOnly Session Management** (OWASP compliance).
 - **Prompt Engineering & Reliability:** Advanced system instructions ensure context-adherence and "zero-hallucination" responses. Supports dynamic persona switching based on user query complexity.
 - **Safety Guardrails:** Multi-layered input/output validation (NeMo inspired) prevents injection attacks and ensures medical-grade communication standards.
@@ -62,8 +63,8 @@ graph TD
 * **CI/CD Ready:** Google Artifact Registry & Cloud Build compatible
 
 ### Logic & Orchestration
-* **Core Language:** Python 3.12
 * **Agentic Framework:** LangGraph & LangChain ecosystem
+* **Multi-LLM Router:** Custom Cascade Handler (Gemini → Groq → OpenRouter)
 * **Vector Store:** Qdrant Cloud (Managed)
 * **Observability:** LangSmith (Full Execution Tracing)
 * **Web Framework:** FastAPI (Asynchronous Uvicorn)
