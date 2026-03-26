@@ -21,6 +21,8 @@ This platform leverages the **Google Cloud Ecosystem** to deliver a resilient, c
 - **Zero-Cost Semantic Caching:** Optimized interception matrix implemented in Qdrant. Semantically similar queries are resolved in 0.05s directly from vector memory, significantly reducing LLM inference costs.
 - **Full Observability:** Integrated with **LangSmith** for end-to-end tracing. Tracks latency, token consumption, and multi-hop reasoning logic in production environments.
 - **Secured Administrative Panel:** A professional web interface for knowledge base management. Implements **Cloudflare Turnstile**, **SlowAPI Rate Limiting**, and **Strict HttpOnly Session Management** (OWASP compliance).
+- **Prompt Engineering & Reliability:** Advanced system instructions ensure context-adherence and "zero-hallucination" responses. Supports dynamic persona switching based on user query complexity.
+- **Safety Guardrails:** Multi-layered input/output validation (NeMo inspired) prevents injection attacks and ensures medical-grade communication standards.
 
 ## Architectural Topology
 
@@ -28,11 +30,12 @@ This platform leverages the **Google Cloud Ecosystem** to deliver a resilient, c
 graph TD
     User([User / Clinician]) -->|Text or Voice| Telegram[Telegram API]
     Telegram -->|Webhook POST| CR[Google Cloud Run<br>FastAPI Backend]
+    CR -->|Telemetry| LS[LangSmith<br>Observability]
     
     subgraph Cognitive Engine
         CR --> Router{Query Router}
         Router -->|Complexity: Low| Groq[Groq / Llama 3]
-        Router -->|Complexity: High| Gemini[Google Vertex / Gemini]
+        Router -->|Complexity: High| Gemini[Google Gemini 1.5 Pro]
     end
     
     subgraph Memory Matrix
