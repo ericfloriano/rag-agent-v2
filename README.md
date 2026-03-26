@@ -12,12 +12,12 @@
 ## Overview
 **ReCARE AI FastLearn** is an enterprise-grade, serverless Retrieval-Augmented Generation (RAG) ecosystem built to provide high-fidelity, contextual technical support for advanced medical devices (ReCARE / RePAD).
 
-This platform leverages the **Google Cloud Ecosystem** to deliver a resilient, cost-effective, and scalable conversational agent. By orchestrating **Google Gemini 1.5 Pro** and **Google Cloud Run**, the architecture ensures enterprise security and sub-second latency for critical information retrieval.
+This platform leverages the **Google Cloud Ecosystem** to deliver a resilient, cost-effective, and scalable conversational agent. By orchestrating **Google Gemini 2.0 Flash** and **Google Cloud Run**, the architecture ensures enterprise security and sub-second latency for critical information retrieval.
 
 ## Key Features & Professional Architecture
 - **Multi-Modal Integration:** Fully integrated with Telegram Webhooks. Handles continuous context and parses voice messages autonomously using high-concurrency transcription models.
 - **Native Google Cloud Serverless Infrastructure:** Engineered for **Google Cloud Run**. The stateless architecture enables "Scale to Zero", eliminating idle costs while ensuring instant readiness for user interactions.
-- **Intelligent LLM Orchestration:** Powered by **LangGraph**, the system dynamically routes queries between **Gemini 1.5 Pro** for deep technical reasoning and **Llama-3 (via Groq)** for high-speed assistance.
+- **Intelligent LLM Orchestration:** Powered by **LangGraph**, the system dynamically routes queries between **Gemini 2.0 Flash** for state-of-the-art technical reasoning and **Llama-3 (via Groq)** for high-speed assistance.
 - **Zero-Cost Semantic Caching:** Optimized interception matrix implemented in Qdrant. Semantically similar queries are resolved in 0.05s directly from vector memory, significantly reducing LLM inference costs.
 - **Full Observability:** Integrated with **LangSmith** for end-to-end tracing. Tracks latency, token consumption, and multi-hop reasoning logic in production environments.
 - **Secured Administrative Panel:** A professional web interface for knowledge base management. Implements **Cloudflare Turnstile**, **SlowAPI Rate Limiting**, and **Strict HttpOnly Session Management** (OWASP compliance).
@@ -35,7 +35,7 @@ graph TD
     subgraph Cognitive Engine
         CR --> Router{Query Router}
         Router -->|Complexity: Low| Groq[Groq / Llama 3]
-        Router -->|Complexity: High| Gemini[Google Gemini 1.5 Pro]
+        Router -->|Complexity: High| Gemini[Google Gemini 2.0 Flash]
     end
     
     subgraph Memory Matrix
@@ -55,7 +55,7 @@ graph TD
 
 ## Technology Stack
 ### Google Cloud Foundations
-* **Model Reasoning:** Google Gemini 1.5 Pro (Generative AI)
+* **Model Reasoning:** Google Gemini 2.0 Flash (Generative AI)
 * **Embedding Model:** Google `gemini-embedding-2-preview` (3072 dims)
 * **Compute:** Google Cloud Run (Serverless Container Orchestration)
 * **Persistent Memory:** Google Cloud Firestore (NoSQL Document Store)

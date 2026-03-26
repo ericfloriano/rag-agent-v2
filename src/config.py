@@ -32,7 +32,7 @@ OPENROUTER_REASON_MODEL = os.getenv("OPENROUTER_REASON_MODEL", "meta-llama/llama
 OPENROUTER_GEMMA_MODEL = os.getenv("OPENROUTER_GEMMA_MODEL", "meta-llama/llama-3.1-8b-instruct:free")
 
 # === Embeddings ===
-EMBEDDINGS_MODEL_NAME = os.getenv("EMBEDDINGS_MODEL_NAME", "models/gemini-embedding-001")
+EMBEDDINGS_MODEL_NAME = os.getenv("EMBEDDINGS_MODEL_NAME", "models/gemini-embedding-2-preview")
 
 # === Whisper (Speech-to-Text) ===
 WHISPER_MODEL_NAME = os.getenv("WHISPER_MODEL_NAME", "whisper-large-v3-turbo")
