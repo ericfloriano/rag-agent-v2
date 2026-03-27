@@ -56,20 +56,20 @@ graph TD
 ```
 
 ## Technology Stack
-### 🏰 Hybrid Resilience Matrix (Multi-LLM Cascade)
+### Hybrid Resilience Matrix (Multi-LLM Cascade)
 To ensure **100% Uptime** and **Cost-Optimization**, the system implements a proprietary routing logic:
 - **Primary Inference (Ultra-Low Latency):** **Llama-3.1 (via Groq)** — Serves 95% of queries with sub-second response times at zero inference cost.
 - **Secondary Failover (High Reliability):** **Kimi-Chat (via OpenRouter)** — Acts as a robust bridge if Groq encounters burst-limitations.
 - **Tertiary/Reasoning Layer:** **Google Gemini 2.0 Flash** — The high-fidelity "Final Arbiter". Used for complex medical reasoning or as the ultimate failover.
 
-### 🌐 Google Cloud Foundations
+### Google Cloud Foundations
 - **Model Reasoning:** Google Gemini 2.0 Flash (Generative AI)
 - **Embedding Model:** Google `gemini-embedding-2-preview` (3072 dims)
 - **Compute:** **Google Cloud Run** (Serverless Container Orchestration)
 - **Persistent Memory:** **Google Cloud Firestore** (NoSQL Document Store)
 - **CI/CD Ready:** Google Artifact Registry & Cloud Build compatible
 
-### 🧩 Logic & Orchestration
+### Logic & Orchestration
 - **Agentic Framework:** **LangGraph** & **LangChain** ecosystem
 - **Vector Store:** **Qdrant Cloud** (Managed)
 - **Observability:** **LangSmith** (Full Execution Tracing)
