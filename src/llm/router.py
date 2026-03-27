@@ -51,11 +51,11 @@ class LLMIntentRouter:
                 ("Gemini", get_gemini_llm, GEMINI_FLASH_MODEL)
             ]
         elif self.task_type == "grade_documents":
-            # Needs large context window
+            # Needs precision, so Groq first, then Gemini (large context)
             route_plan = [
-                ("Gemini", get_gemini_llm, GEMINI_FLASH_MODEL),
                 ("Groq (Reasoning)", get_groq_llm, GROQ_REASON_MODEL),
-                ("OpenRouter (Gemma)", get_openrouter_llm, OPENROUTER_GEMMA_MODEL)
+                ("OpenRouter (Gemma)", get_openrouter_llm, OPENROUTER_GEMMA_MODEL),
+                ("Gemini", get_gemini_llm, GEMINI_FLASH_MODEL)
             ]
         elif self.task_type == "generate_factual":
             # Needs complex reasoning and RAG extraction
@@ -68,15 +68,15 @@ class LLMIntentRouter:
             # Needs fluency and empathy
             route_plan = [
                 ("Groq (Reasoning)", get_groq_llm, GROQ_REASON_MODEL),
-                ("Gemini", get_gemini_llm, GEMINI_FLASH_MODEL),
-                ("OpenRouter (Fast)", get_openrouter_llm, OPENROUTER_FAST_MODEL)
+                ("OpenRouter (Fast)", get_openrouter_llm, OPENROUTER_FAST_MODEL),
+                ("Gemini", get_gemini_llm, GEMINI_FLASH_MODEL)
             ]
         else:
             # Default
             route_plan = [
                 ("Groq (Reasoning)", get_groq_llm, GROQ_REASON_MODEL),
-                ("Gemini", get_gemini_llm, GEMINI_FLASH_MODEL),
-                ("OpenRouter (Fast)", get_openrouter_llm, OPENROUTER_FAST_MODEL)
+                ("OpenRouter (Fast)", get_openrouter_llm, OPENROUTER_FAST_MODEL),
+                ("Gemini", get_gemini_llm, GEMINI_FLASH_MODEL)
             ]
 
         for name, factory, model_name in route_plan:

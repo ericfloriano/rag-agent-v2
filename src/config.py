@@ -28,8 +28,8 @@ GROQ_REASON_MODEL = os.getenv("GROQ_MODEL_NAME", "llama-3.1-8b-instant")
 
 # OpenRouter
 OPENROUTER_FAST_MODEL = os.getenv("OPENROUTER_FAST_MODEL", "meta-llama/llama-3.1-8b-instruct:free")
-OPENROUTER_REASON_MODEL = os.getenv("OPENROUTER_REASON_MODEL", "meta-llama/llama-3.1-8b-instruct:free")
-OPENROUTER_GEMMA_MODEL = os.getenv("OPENROUTER_GEMMA_MODEL", "meta-llama/llama-3.1-8b-instruct:free")
+OPENROUTER_REASON_MODEL = os.getenv("OPENROUTER_REASON_MODEL", "moonshotai/moonshot-v1-8k")
+OPENROUTER_GEMMA_MODEL = os.getenv("OPENROUTER_GEMMA_MODEL", "google/gemma-2-9b-it:free")
 
 # === Embeddings ===
 EMBEDDINGS_MODEL_NAME = os.getenv("EMBEDDINGS_MODEL_NAME", "models/gemini-embedding-2-preview")
