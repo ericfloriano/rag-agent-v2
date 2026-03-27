@@ -47,8 +47,8 @@ class LLMIntentRouter:
             # Needs speed, low reasoning
             route_plan = [
                 ("Groq (Fast)", get_groq_llm, GROQ_FAST_MODEL),
-                ("Gemini", get_gemini_llm, GEMINI_FLASH_MODEL),
-                ("OpenRouter (Fast)", get_openrouter_llm, OPENROUTER_FAST_MODEL)
+                ("OpenRouter (Fast)", get_openrouter_llm, OPENROUTER_FAST_MODEL),
+                ("Gemini", get_gemini_llm, GEMINI_FLASH_MODEL)
             ]
         elif self.task_type == "grade_documents":
             # Needs large context window
@@ -61,8 +61,8 @@ class LLMIntentRouter:
             # Needs complex reasoning and RAG extraction
             route_plan = [
                 ("Groq (Reasoning)", get_groq_llm, GROQ_REASON_MODEL),
-                ("Gemini", get_gemini_llm, GEMINI_FLASH_MODEL),
-                ("OpenRouter (Reasoning)", get_openrouter_llm, OPENROUTER_REASON_MODEL)
+                ("OpenRouter (Reasoning)", get_openrouter_llm, OPENROUTER_REASON_MODEL),
+                ("Gemini", get_gemini_llm, GEMINI_FLASH_MODEL)
             ]
         elif self.task_type == "generate_coaching":
             # Needs fluency and empathy

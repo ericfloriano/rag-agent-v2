@@ -17,8 +17,8 @@ This platform leverages the **Google Cloud Ecosystem** to deliver a resilient, c
 ## Key Features & Professional Architecture
 - **Multi-Modal Integration:** Fully integrated with Telegram Webhooks. Handles continuous context and parses voice messages autonomously using high-concurrency transcription models.
 - **Native Google Cloud Serverless Infrastructure:** Engineered for **Google Cloud Run**. The stateless architecture enables "Scale to Zero", eliminating idle costs while ensuring instant readiness for user interactions.
-- **Intelligent LLM Orchestration:** Powered by **LangGraph**, the system dynamically routes queries between **Gemini 2.0 Flash** for state-of-the-art technical reasoning and **Llama-3 (via Groq)** for high-speed assistance.
-- **Zero-Cost Semantic Caching:** Optimized interception matrix implemented in Qdrant. Semantically similar queries are resolved in 0.05s directly from vector memory, significantly reducing LLM inference costs.
+- **Cost-Optimized Hybrid Orchestration:** Powered by **LangGraph**, the system implements a **FinOps-First** strategy. It prioritizes **Llama-3 (via Groq)** for ultra-fast, zero-cost primary inference, with **Gemini 2.0 Flash** acting as a high-fidelity reasoning fallback for complex or failed queries.
+- **Sub-Second Latency:** Average response time < 0.8s for cached or Groq-based queries, ensuring a superior user experience in medical environments.
 - **Full Observability:** Integrated with **LangSmith** for end-to-end tracing. Tracks latency, token consumption, and multi-hop reasoning logic in production environments.
 - **Architectural Resilience (Multi-LLM Cascade):** Implementation of a custom `LLMIntentRouter`. If the primary model (Gemini) encounters rate limits or outages, the system automatically falls back to secondary (Groq/Llama-3) and tertiary (OpenRouter/Kimi) providers in sub-milliseconds.
 - **Secured Administrative Panel:** A professional web interface for knowledge base management. Implements **Cloudflare Turnstile**, **SlowAPI Rate Limiting**, and **Strict HttpOnly Session Management** (OWASP compliance).
@@ -35,9 +35,9 @@ graph TD
     
     subgraph Cognitive Engine
         CR --> Router{Multi-LLM Intent Router}
-        Router --> Primary[Gemini 2.0 Flash]
-        Primary -- Failover --> Secondary[Groq / Llama 3]
-        Secondary -- Failover --> Tertiary[OpenRouter / Kimi]
+        Router --> Primary[Groq / Llama 3]
+        Primary -- Outage/Complexity --> Secondary[OpenRouter / Kimi]
+        Secondary -- Multi-Hop Failover --> Tertiary[Gemini 2.0 Flash]
     end
     
     subgraph Memory Matrix

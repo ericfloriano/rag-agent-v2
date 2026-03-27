@@ -85,9 +85,11 @@ async def generate(state: AgentState) -> dict:
     response = await router.ainvoke([HumanMessage(content=prompt)])
     generation = response.content.strip()
 
-    logger.info(f"✅ AI Answer generated ({len(generation)} chars)")
+    # Get model name for logging
+    model_info = response.response_metadata.get("model_name", "Unknown Model")
+    logger.info(f"✅ AI Answer generated using {model_info}")
 
     return {
         "generation": generation,
-        "llm_provider_used": "unified_generation",
+        "llm_provider_used": model_info,
     }

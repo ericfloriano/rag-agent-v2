@@ -98,7 +98,6 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
 
     # 2. Show typing indicator
     await update.effective_chat.send_action("typing")
-
     # 3. Check Semantic Cache
     cached_response = await check_cache(cleaned_text)
     if cached_response:
