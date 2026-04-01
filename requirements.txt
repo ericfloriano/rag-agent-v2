@@ -10,16 +10,18 @@ python-dotenv==1.1.0
 # --- LangChain Ecosystem ---
 langchain==0.3.20
 langchain-core==0.3.52
+langchain-community
 langgraph==0.3.30
 langchain-google-genai==2.1.4
 langchain-groq==0.3.2
 langchain-openai==0.3.12
 langsmith==0.3.26
+langfuse==2.53.8
 
 # --- Vector Database ---
 langchain-qdrant==0.2.0
 qdrant-client>=1.13.3
-fastembed==0.6.1
+fastembed==0.3.4
 
 # --- Telegram Bot ---
 python-telegram-bot==21.10

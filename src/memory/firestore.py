@@ -12,7 +12,7 @@ Structure:
 """
 
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 
 from google.cloud import firestore
 
@@ -20,13 +20,13 @@ from src.config import GCP_PROJECT_ID, FIRESTORE_COLLECTION
 
 logger = logging.getLogger(__name__)
 
-# Module-level singleton
-_db: firestore.Client | None = None
+# Module-level singleton using AsyncClient to prevent Event Loop blocking
+_db: firestore.AsyncClient | None = None
 
 
-def get_firestore_client() -> firestore.Client:
+def get_firestore_client() -> firestore.AsyncClient:
     """
-    Get or initialize the Firestore client (singleton).
+    Get or initialize the asynchronous Firestore client (singleton).
 
     Uses Application Default Credentials (GOOGLE_APPLICATION_CREDENTIALS).
     """
@@ -36,14 +36,14 @@ def get_firestore_client() -> firestore.Client:
             raise ValueError(
                 "GCP_PROJECT_ID not set. Cannot connect to Firestore."
             )
-        _db = firestore.Client(project=GCP_PROJECT_ID)
-        logger.info(f"🔥 Connected to Firestore (project: {GCP_PROJECT_ID})")
+        _db = firestore.AsyncClient(project=GCP_PROJECT_ID)
+        logger.info(f"🔥 Connected to Async Firestore (project: {GCP_PROJECT_ID})")
     return _db
 
 
-def save_message(chat_id: str, role: str, content: str) -> None:
+async def save_message(chat_id: str, role: str, content: str) -> None:
     """
-    Save a message to the conversation history.
+    Asynchronously save a message to the conversation history.
 
     Args:
         chat_id: Telegram chat ID (used as document ID).
@@ -58,19 +58,21 @@ def save_message(chat_id: str, role: str, content: str) -> None:
             .collection("messages")
             .document()
         )
-        doc_ref.set({
+        
+        # Non-blocking database write
+        await doc_ref.set({
             "role": role,
             "content": content,
-            "timestamp": datetime.utcnow(),
+            "timestamp": datetime.now(timezone.utc),
         })
         logger.debug(f"💾 Saved {role} message for chat {chat_id}")
     except Exception as e:
         logger.error(f"❌ Failed to save message to Firestore: {e}")
 
 
-def get_history(chat_id: str, limit: int = 5) -> list[dict]:
+async def get_history(chat_id: str, limit: int = 5) -> list[dict]:
     """
-    Retrieve recent conversation history for a chat.
+    Asynchronously retrieve recent conversation history for a chat.
 
     Args:
         chat_id: Telegram chat ID.
@@ -88,11 +90,16 @@ def get_history(chat_id: str, limit: int = 5) -> list[dict]:
             .order_by("timestamp", direction=firestore.Query.DESCENDING)
             .limit(limit)
         )
-        docs = messages_ref.stream()
-        messages = [
-            {"role": doc.to_dict()["role"], "content": doc.to_dict()["content"]}
-            for doc in docs
-        ]
+        
+        messages = []
+        # Non-blocking database read
+        async for doc in messages_ref.stream():
+            doc_data = doc.to_dict()
+            messages.append({
+                "role": doc_data["role"], 
+                "content": doc_data["content"]
+            })
+            
         # Reverse to get chronological order (oldest first)
         messages.reverse()
         logger.debug(
@@ -107,12 +114,7 @@ def get_history(chat_id: str, limit: int = 5) -> list[dict]:
 def format_history(messages: list[dict]) -> str:
     """
     Format conversation history for injection into the LLM prompt.
-
-    Args:
-        messages: List of message dicts with 'role' and 'content'.
-
-    Returns:
-        Formatted string with the conversation history.
+    Assistant responses are truncated to 150 chars to avoid prompt dilution.
     """
     if not messages:
         return ""
@@ -120,6 +122,12 @@ def format_history(messages: list[dict]) -> str:
     lines = []
     for msg in messages:
         role_label = "Usuário" if msg["role"] == "user" else "Assistente"
-        lines.append(f"{role_label}: {msg['content']}")
+        content = msg["content"]
+        
+        # Truncate long assistant responses to keep prompt lean
+        if msg["role"] == "assistant" and len(content) > 150:
+            content = content[:147] + "..."
+            
+        lines.append(f"{role_label}: {content}")
 
     return "\n".join(lines)

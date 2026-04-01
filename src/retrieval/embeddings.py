@@ -1,53 +1,37 @@
 """
-Embeddings module for Hybrid Search (Dense + Sparse).
+Embeddings module — Dense Semantic Search.
 
-Dense:  Google Gemini Embedding 001 (768 dimensions)
-Sparse: FastEmbed BM25 for keyword matching
+Uses Google Gemini Embedding for high-quality semantic representation.
+LangChain natively handles the switch between 'retrieval_document' (indexing)
+and 'retrieval_query' (searching) automatically under the hood.
 """
 
 import logging
 
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
-from qdrant_client.models import SparseVector
 
 from src.config import GOOGLE_API_KEY, EMBEDDINGS_MODEL_NAME
 
 logger = logging.getLogger(__name__)
 
 
-def get_dense_embeddings() -> GoogleGenerativeAIEmbeddings:
+def get_embeddings() -> GoogleGenerativeAIEmbeddings:
     """
-    Initialize dense embeddings using Google Gemini Embedding 001.
+    Initialize dense embeddings using Google Gemini.
 
     Returns:
-        GoogleGenerativeAIEmbeddings instance (768 dimensions).
+        GoogleGenerativeAIEmbeddings instance.
     """
     if not GOOGLE_API_KEY:
         raise ValueError("GOOGLE_API_KEY not found. Cannot initialize dense embeddings.")
 
-    logger.info(f"🔢 Loading Dense Embeddings: {EMBEDDINGS_MODEL_NAME}")
+    logger.info(f"🔢 Loading Embeddings: {EMBEDDINGS_MODEL_NAME}")
     return GoogleGenerativeAIEmbeddings(
         model=EMBEDDINGS_MODEL_NAME,
         google_api_key=GOOGLE_API_KEY,
-        task_type="retrieval_document",
+        # We don't hardcode task_type here because LangChain handles it dynamically.
     )
 
-
-def get_query_embeddings() -> GoogleGenerativeAIEmbeddings:
-    """
-    Initialize dense embeddings optimized for queries.
-
-    Uses task_type='retrieval_query' for better query-document matching.
-
-    Returns:
-        GoogleGenerativeAIEmbeddings instance configured for queries.
-    """
-    if not GOOGLE_API_KEY:
-        raise ValueError("GOOGLE_API_KEY not found. Cannot initialize query embeddings.")
-
-    logger.info(f"🔍 Loading Query Embeddings: {EMBEDDINGS_MODEL_NAME}")
-    return GoogleGenerativeAIEmbeddings(
-        model=EMBEDDINGS_MODEL_NAME,
-        google_api_key=GOOGLE_API_KEY,
-        task_type="retrieval_query",
-    )
+# Mantendo os aliases por compatibilidade caso sejam usados em outras partes do código
+get_dense_embeddings = get_embeddings
+get_query_embeddings = get_embeddings

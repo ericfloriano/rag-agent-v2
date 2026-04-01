@@ -1,3 +1,9 @@
+"""
+Admin Router for the Agentic RAG v2 application.
+Provides web-based admin panel for knowledge base management.
+Implements secure file upload, document ingestion, and cache management.
+"""
+
 import os
 from collections import Counter
 from pathlib import Path
@@ -26,20 +32,26 @@ router = APIRouter(prefix="/admin", tags=["Admin Panel"])
 
 
 @router.get("/login", response_class=HTMLResponse)
-@limiter.limit("10/minute") # Rate Limiting (OWASP A07)
+@limiter.limit("10/minute")  # Rate Limiting (OWASP A07)
 async def login_page(request: Request):
-    """Render the secure login page with Anti-Bot protection."""
+    """
+    Render the secure login page with Anti-Bot protection.
+    Uses Cloudflare Turnstile to prevent automated attacks.
+    """
     return templates.TemplateResponse("login.html", {"request": request, "sitekey": TURNSTILE_SITEKEY})
 
 
 @router.post("/login")
-@limiter.limit("5/minute") # Strict Rate Limiting (Anti Brute-Force)
+@limiter.limit("5/minute")  # Strict Rate Limiting (Anti Brute-Force)
 async def login_submit(
     request: Request,
     password: str = Form(...),
     cf_turnstile_response: str = Form(""),
 ):
-    """Process login, call Cloudflare, return HttpOnly cookie."""
+    """
+    Process login, verify Turnstile challenge, and return HttpOnly cookie.
+    Implements multi-layer security: CAPTCHA + Rate Limiting + Secure Cookies.
+    """
     
     # 1. Cloudflare Anti-Bot Challenge
     if not await verify_turnstile(cf_turnstile_response, request.client.host):
@@ -64,7 +76,7 @@ async def login_submit(
         value=EXPECTED_COOKIE_HASH,
         httponly=True,  # Blocks XSS theft
         secure=request.url.scheme == "https",  # Enforce HTTPS transmission
-        samesite="lax", # Anti-CSRF
+        samesite="lax",  # Anti-CSRF
         max_age=3600  # 1 Hour lifespan
     )
     return response
@@ -72,7 +84,7 @@ async def login_submit(
 
 @router.get("/logout")
 async def logout():
-    """Clear session safely."""
+    """Clear session safely by deleting the admin cookie."""
     response = RedirectResponse(url="/admin/login")
     response.delete_cookie(COOKIE_NAME)
     return response
@@ -180,15 +192,20 @@ async def delete_document(request: Request, filename: str):
 async def clear_semantic_cache(request: Request):
     """
     Zero-Cost Semantic Cache Wipeout.
-    Deletes points internally in the cache collection.
+    Drops and recreates the cache collection to guarantee a clean wipe.
     """
     client = get_qdrant_client()
     try:
-        from qdrant_client.http.models import Filter
-        client.delete(
-            collection_name=CACHE_COLLECTION_NAME,
-            points_selector=Filter() # Empty generic filter wipes entire collection contents
-        )
+        from src.retrieval.vector_store import init_cache_collection_if_needed
+        
+        # Drop the entire collection (guaranteed clean)
+        if client.collection_exists(CACHE_COLLECTION_NAME):
+            client.delete_collection(CACHE_COLLECTION_NAME)
+        
+        # Recreate empty
+        init_cache_collection_if_needed(client)
+        
         return {"status": "success", "message": "Semantic Cache successfully purged!"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+

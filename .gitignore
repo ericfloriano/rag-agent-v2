@@ -26,3 +26,8 @@ docs/
 
 # Personal Portfolio Documentation
 .portfolio_docs/
+
+#Git Actions
+.github/workflows/*.yml
+.github/workflows/*.yaml
+.github/workflows/*.yml

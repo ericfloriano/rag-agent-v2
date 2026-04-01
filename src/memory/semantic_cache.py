@@ -12,7 +12,7 @@ from langchain_core.documents import Document
 from langchain_qdrant import QdrantVectorStore
 
 from src.retrieval.vector_store import get_qdrant_client, init_cache_collection_if_needed
-from src.retrieval.embeddings import get_dense_embeddings
+from src.retrieval.embeddings import get_embeddings
 from src.config import CACHE_COLLECTION_NAME, SEMANTIC_CACHE_THRESHOLD
 
 logger = logging.getLogger(__name__)
@@ -27,7 +27,8 @@ def get_cache_store() -> QdrantVectorStore:
         client = get_qdrant_client()
         init_cache_collection_if_needed(client)
         
-        embeddings = get_dense_embeddings()
+        # Uses the unified embeddings interface from our previous refactor
+        embeddings = get_embeddings()
         _cache_store = QdrantVectorStore(
             client=client,
             collection_name=CACHE_COLLECTION_NAME,

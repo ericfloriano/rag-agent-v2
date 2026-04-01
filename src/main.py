@@ -1,19 +1,29 @@
 """
-FastAPI entrypoint for the Agentic RAG v2 application.
-Serves as the webhook receiver for Telegram and health check endpoint for Cloud Run.
+Main FastAPI application entrypoint.
+
+Orchestrates the HTTP server, the Admin Panel router, and the Telegram Bot.
+Uses modern FastAPI lifespan to manage the startup and shutdown.
 """
 
-import os
 import logging
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Request, Response
+from fastapi import FastAPI, Request, Response, status
+from fastapi.middleware.cors import CORSMiddleware
+from telegram import Update
 
-from src.config import LOG_LEVEL, TELEGRAM_BOT_TOKEN
+# --- Security Imports ---
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from src.admin.security import limiter
 
-# Setup logging
+from src.config import USE_WEBHOOK, WEBHOOK_URL
+from src.channels.telegram import start_bot, stop_bot, get_telegram_app
+from src.admin.router import router as admin_router
+
+# Configure base logging
 logging.basicConfig(
-    level=getattr(logging, LOG_LEVEL),
+    level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 logger = logging.getLogger(__name__)
@@ -21,97 +31,69 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Application lifespan: startup and shutdown events."""
-    logger.info("🚀 Starting Agentic RAG v2...")
-
-    # --- STARTUP ---
-
-    # 1. Initialize LangGraph Agent (lazy — compiled on first use)
-    from src.agent.graph import get_graph
-    logger.info("🧠 LangGraph agent ready (lazy initialization)")
-
-    # 2. Initialize Firestore
+    logger.info("🚀 Starting up Agentic RAG v2...")
+    
     try:
-        from src.memory.firestore import get_firestore_client
-        get_firestore_client()
-        logger.info("🔥 Firestore connected")
-    except Exception as e:
-        logger.warning(f"⚠️ Firestore not available: {e}")
-
-    # 3. Start Telegram Bot
-    from src.channels.telegram import start_bot, stop_bot
-    try:
-        await start_bot()
-        logger.info("📱 Telegram bot started")
+        app_bot = await start_bot()
+        if USE_WEBHOOK and WEBHOOK_URL:
+            webhook_endpoint = f"{WEBHOOK_URL}/webhook"
+            await app_bot.bot.set_webhook(url=webhook_endpoint)
+            logger.info(f"🔗 Webhook set to: {webhook_endpoint}")
+            
     except Exception as e:
         logger.error(f"❌ Failed to start Telegram bot: {e}")
 
-    logger.info("✅ Agentic RAG v2 started successfully!")
+    yield  
 
-    yield  # Application runs here
-
-    # --- SHUTDOWN ---
     logger.info("🛑 Shutting down Agentic RAG v2...")
     try:
         await stop_bot()
     except Exception as e:
-        logger.warning(f"⚠️ Error stopping Telegram bot: {e}")
-    logger.info("👋 Agentic RAG v2 shut down.")
+        logger.error(f"❌ Error during Telegram bot shutdown: {e}")
 
 
 app = FastAPI(
-    title="Agentic RAG v2",
-    description="Next-gen Retrieval-Augmented Generation with LangGraph, Multi-LLM Cascade, and Voice Support",
+    title="Agentic RAG v2 API",
+    description="Backend for the Visuri/Contourline AI Agent and Admin Panel.",
     version="2.0.0",
     lifespan=lifespan,
 )
 
-# Setup SlowAPI Rate Limiter
-from slowapi import _rate_limit_exceeded_handler
-from slowapi.errors import RateLimitExceeded
-from src.admin.security import limiter
-
+# --- Restore SlowAPI Setup ---
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-# Include Admin Router
-from src.admin.router import router as admin_router
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 app.include_router(admin_router)
 
 
-@app.get("/")
+@app.get("/health", tags=["System"])
 async def health_check():
-    """Health check endpoint for Cloud Run."""
-    return {"status": "healthy", "service": "rag-agent-v2"}
+    return {"status": "healthy", "agent": "Agentic RAG v2 is running."}
 
 
-@app.get("/readiness")
-async def readiness():
-    """Readiness probe for Cloud Run. Checks if all services are connected."""
-    # TODO: Add actual checks (Qdrant, LLM, Firestore)
-    return {"status": "ready"}
-
-
-@app.post("/webhook")
+@app.post("/webhook", tags=["Telegram Integration"])
 async def telegram_webhook(request: Request):
-    """
-    Handle incoming Telegram updates (called by Telegram servers).
-    Requires USE_WEBHOOK=True in production.
-    """
-    from telegram import Update
-    from src.channels.telegram import get_telegram_app
+    if not USE_WEBHOOK:
+        return Response(status_code=status.HTTP_403_FORBIDDEN)
 
-    app_telegram = get_telegram_app()
-    if not app_telegram:
-        logger.error("Webhook called but Telegram app is not initialized.")
-        return Response(status_code=500, content="Bot not ready")
+    telegram_app = get_telegram_app()
+    if not telegram_app:
+        logger.error("⚠️ Webhook received but Telegram app is not initialized.")
+        return Response(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     try:
-        data = await request.json()
-        update = Update.de_json(data, app_telegram.bot)
-        await app_telegram.process_update(update)
+        payload = await request.json()
+        update = Update.de_json(payload, telegram_app.bot)
+        await telegram_app.process_update(update)
+        return Response(status_code=status.HTTP_200_OK)
     except Exception as e:
-        logger.error(f"Failed to process webhook update: {e}")
-        return Response(status_code=400, content="Bad Request")
-
-    return Response(status_code=200, content="OK")
+        logger.error(f"❌ Error processing webhook update: {e}")
+        return Response(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
