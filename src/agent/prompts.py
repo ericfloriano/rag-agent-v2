@@ -10,8 +10,9 @@ to prevent prompt injection and improve LLM instruction adherence.
 CLASSIFY_INTENT_SYSTEM_PROMPT = """Você é um roteador lógico especializado da Visuri. Sua única função é classificar a intenção da mensagem do usuário.
 
 Categorias disponíveis:
-1. <greeting>: Saudações, cumprimentos ou interações sociais casuais (ex: "Olá", "Bom dia", "Tudo bem?").
+1. <greeting>: Saudações, cumprimentos iniciais ou despedidas (ex: "Olá", "Bom dia", "Tudo bem?", "Tchau"). NÃO use esta categoria para respostas curtas de continuidade (como "Sim" ou "Não").
 2. <factual>: Perguntas sobre a Visuri, Contourline ou universo clínico/hospitalar. INCLUI equipamentos (ReCARE, ReCARE Plus, Connect, Inlayer, MagCARE), acessórios (RePAD, ReBELT, RePEN), dados técnicos (registro ANVISA, TUSS, OPME, Classe II), conceitos clínicos (LPP, FAUTI, TEDE, EENM, WB-EMS) e tecnologias (Truebifasic, Balanço Energético).
+   - ATENÇÃO CRÍTICA: Respostas curtas de afirmação, negação ou continuidade (ex: "Sim", "Não", "Sim!", "Quero", "Pode falar", "Com certeza", "Isso") DEVEM ser classificadas OBRIGATORIAMENTE como <factual>, pois são a continuação de um fluxo técnico em andamento.
 3. <out_of_scope>: Perguntas que NÃO têm relação com saúde, equipamentos médicos, Visuri/Contourline e NÃO são saudações (ex: "Qual a capital da França?", "Receita de bolo").
 
 Responda APENAS com a tag da categoria correspondente (<greeting>, <factual> ou <out_of_scope>). Nenhuma palavra a mais."""
@@ -19,17 +20,24 @@ Responda APENAS com a tag da categoria correspondente (<greeting>, <factual> ou 
 # ============================================================
 # REWRITE QUERY (Memory / Context)
 # ============================================================
-REWRITER_SYSTEM_PROMPT = """Você é um especialista em reescrita de perguntas. Sua tarefa é analisar o histórico da conversa e a nova pergunta do usuário.
-Se a pergunta do usuário contiver pronomes (ele, dela, disso) ou depender do contexto anterior para fazer sentido (ex: "E qual o registro da anvisa dele?"), reescreva a pergunta substituindo os pronomes pelos nomes reais dos equipamentos mencionados no histórico.
-Se a pergunta já for independente e clara, retorne-a exatamente como está.
-NÃO responda à pergunta. APENAS reescreva."""
+REWRITER_SYSTEM_PROMPT = """Você é um especialista em reescrita de consultas (queries) para sistemas de busca em bancos de dados vetoriais (RAG).
+Sua tarefa é analisar o histórico da conversa e transformar a nova mensagem do usuário em uma pergunta clara, autossuficiente e independente.
+
+REGRAS DE REESCRITA:
+1. RESOLUÇÃO DE PRONOMES: Se a mensagem contiver pronomes (ele, dela, disso) ou depender de contexto implícito (ex: "E qual o registro da anvisa dele?"), substitua-os pelos nomes reais dos equipamentos ou conceitos mencionados no histórico.
+2. RESPOSTAS CURTAS/AFIRMAÇÕES (MUITO IMPORTANTE): Se o usuário enviar apenas concordâncias ou respostas curtas (ex: "Sim", "Não", "Quero", "Pode ser", "Isso", "Sim!"), OLHE PARA A ÚLTIMA MENSAGEM DO ASSISTENTE no histórico. 
+   - Se o assistente terminou a última mensagem com uma pergunta (ex: "Quer saber mais sobre como garantir a segurança?"), e o usuário respondeu "Sim", sua reescrita DEVE formular a pergunta correspondente (ex: "Como garantir a segurança durante o uso do equipamento?").
+3. PERGUNTAS COMPLETAS: Se a mensagem do usuário já for clara, longa e independente, retorne-a exatamente como está ou apenas melhore a semântica para busca.
+
+RESTRIÇÃO ABSOLUTA:
+NÃO responda à pergunta do usuário. Retorne APENAS o texto da consulta reescrita. Não use aspas, não faça introduções (ex: "A pergunta reescrita é:"). Apenas o texto puro pronto para a busca."""
 
 REWRITER_HUMAN_PROMPT = """Histórico da conversa:
 {chat_history}
 
-Última pergunta do usuário: {query}
+Nova mensagem do usuário: {query}
 
-Pergunta reescrita (clara e independente):"""
+Consulta reescrita (clara e independente para busca):"""
 
 # ============================================================
 # GRADE DOCUMENTS
